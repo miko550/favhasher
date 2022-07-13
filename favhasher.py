@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse, requests, urllib3, mmh3, codecs
 from termcolor import colored
-import concurrent.futures
 urllib3.disable_warnings()
 
 version = 0.1
@@ -11,13 +10,24 @@ def calfav(target):
     try:
 
         url = f'https://{target}/favicon.ico'
-
         response = requests.get(url, verify=False)
-        favicon = codecs.encode(response.content,"base64")
-        hash = mmh3.hash(favicon)
-        print(colored(f'\nurl:{url}', "cyan"))
-        #print(colored('\nhttp.favicon.hash:'+str(hash), "yellow", attrs=['bold']))
-        print(colored(f'http.favicon.hash:{hash}', "yellow"))
+
+        if (response.status_code == 404):
+            url = f'https://{target}/favicon.png'
+            response = requests.get(url, verify=False)
+            if (response.status_code == 404):
+                url = f'https://{target}/favicon.gif'
+                response = requests.get(url, verify=False)
+
+        if (response.status_code != 404):
+            favicon = codecs.encode(response.content,"base64")
+            hash = mmh3.hash(favicon)
+            print(colored(f'\nurl:{url}', "cyan"))
+            #print(colored('\nhttp.favicon.hash:'+str(hash), "yellow", attrs=['bold']))
+            print(colored(f'http.favicon.hash:{hash}', "yellow"))
+        else:
+            print(colored(f'\nurl:{target}', "cyan"))
+            print(colored(f'http.favicon.hash: not found', "red"))
 
     except Exception as e:
         print(colored(e, "red"))
@@ -30,7 +40,7 @@ def banner():
 if __name__ == "__main__":
 
     ## version
-    banner()
+    #banner()
 
     ## parse argument
     parser = argparse.ArgumentParser()
